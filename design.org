@@ -1,0 +1,23 @@
+#+title Virtual Radio DJ
+
+* Goals
+
+The vrdj package provides:
+
+- a set of Python modules
+- command line program
+- beets plugin
+
+in order to generate associations between sets of songs in a collection.  For
+example, given a song, vrdj can list the ten most similar songs in the
+collection.  Or, the ten least similar songs.  Different comparison methods are
+supported.
+
+* Architecture
+
+Comparisons are based on digests of song audio data.  Initially, VGGish
+embeddings are constructed and from these FAISS vectors are produced that span
+time segments of songs.  Per-segment vectors and a per-song and per-album
+average vectors are stored in corresponding FAISS indices.  Associations between
+Beets and FAISS are stored in a vrdj sqlite3 database as are the embedding values.
+
