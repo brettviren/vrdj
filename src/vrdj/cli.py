@@ -12,9 +12,10 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 _log = logging.getLogger(__name__)
 
 class Main:
-    def __init__(self, directory, scheme, device):
+    def __init__(self, directory, metric, embedding, device):
         self._directory = directory
-        self._scheme = scheme
+        self._metric = metric
+        self._embedding = embedding
         self._device = device
 
     @property
@@ -26,7 +27,8 @@ class Main:
                 from vrdj import beetface
                 self._directory = (beetface.dbpath().parent / "vrdj").absolute()
             self._store = db.Store(self._directory,
-                                   scheme=self._scheme,
+                                   metric=self._metric,
+                                   embedding=self.embedding,
                                    device=self._device)
         return self._store
 
@@ -36,18 +38,20 @@ class Main:
               help='Path to the vrdj store directory.',
               type=click.Path(exists=True, file_okay=False, dir_okay=True,
                               resolve_path=True, writable=True, path_type=Path))
-@click.option('-s', '--scheme', default='vggish-mean-cosine',
-              help='Indexing scheme (e.g., vggish-mean-cosine).')
+@click.option('-m', '--metric', default='cosine',
+              help='Comparison metric.')
+@click.option('-m', '--embedding', default='vggish',
+              help='Embedding model.')
 @click.option('--device', default='cpu',
               help='Device for torch',
               type=click.Choice(["cpu","cuda"])) # fixme: add more
 @click.pass_context
-def cli(ctx, directory, scheme, device):
+def cli(ctx, directory, metric, embedding, device):
     """
     Virtual Radio DJ (VRDJ) CLI for indexing and searching audio similarity 
     based on VGGish embeddings and Faiss.
     """
-    ctx.obj = Main(directory, scheme, device)
+    ctx.obj = Main(directory, metric, embeddings, device)
 
 
 @cli.command('beets')
@@ -65,7 +69,7 @@ def cmd_ingest(ctx, filepaths):
     '''
     Ingest files into the index.
     '''
-    from vrdj import op, beetface
+    from vrdj import beetface
     lib = beetface.library()
     for item_path in filepaths:
         print(f'ingesting {item_path}')
@@ -75,7 +79,7 @@ def cmd_ingest(ctx, filepaths):
             continue
         item_path = item.path.decode()
         print(f'ingesting {item.id} {item_path}')
-        op.ingest(ctx.obj.store, item_path, item.id)
+        ctx.obj.store.add_embedding(item.id, item_path)
 
 def main():
     cli(obj={})

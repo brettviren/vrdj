@@ -1,0 +1,8 @@
+#+title Virtual Radio DJ
+
+The vrdj (poorly) tries to do what real human DJs do: find songs that go well
+together.  It does this by identifying a set of songs that are similar to a seed
+song or a set of seed songs.  Similarity is based on applying the VGGish
+embedding model to form vectors and then finding vectors for other songs that are need the vector(s) for the seed(s).
+
+The vrdj works best when used as a beets plugin.
