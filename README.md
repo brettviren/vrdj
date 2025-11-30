@@ -1,5 +1,49 @@
-\#+title Virtual Radio DJ
-
 The vrdj (poorly) tries to do what real human DJs do: find songs that go well together. It does this by identifying a set of songs that are similar to a seed song or a set of seed songs. Similarity is based on applying the VGGish embedding model to form vectors and then finding vectors for other songs that are need the vector(s) for the seed(s).
 
 The vrdj works best when used as a beets plugin.
+
+
+# Install
+
+Here is my current "kitchen sink" install of beets including vrdj
+
+```
+$ uv tool install \
+        --with git+https://github.com/brettviren/vrdj \
+        --with git+https://github.com/igordertigor/beets-usertag \
+        beets[discogs,chroma,autobpm]
+```
+
+
+# Configuration
+
+```yaml
+plugins: vrdj
+vrdj:
+  auto: no
+  device: cpu
+  metric: cosine
+  embedding: vggish
+```
+
+This shows the defaults.
+
+-   **auto:** if yes, embeddings and vectors for songs are inserted into the vrdj database during import time. Calculating embeddings takes 1-10 seconds depending on CPU/GPU.
+-   **device:** in principle, VGGish can run on GPU
+-   **metric:** the comparison metric. **cosine** is probably best and compares vector directions but you can try **l2** which will be sensitive to vector length which encodes loudness
+-   **embedding:** currently only VGGish is supported but in the future maybe another is added. VGGish is trained on all sorts of sounds and so music of all kinds tends to cluster together. Expect all songs to have cosine similarity of 0.9 or higher.
+
+
+# Usage
+
+```
+$ beet vrdj --help
+$ beet vrdj <query-defining-seeds> --count <number-of-similar>
+```
+
+
+# To do
+
+-   [ ] find how to make a `-f/--format` like `beet ls` to control how results are printed
+-   [ ] save results to file via `-o/--output` including
+-   [ ] include canned formats such as m3u playlists.
