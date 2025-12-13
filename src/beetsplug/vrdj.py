@@ -34,7 +34,7 @@ class VrdjPlugin(BeetsPlugin):
             embedding = self.config['embedding'].get()
             metric = self.config['metric'].get()
             device = self.config['device'].get()
-            print(f'vrdj: {embedding=} {metric=} {device=} {directory=}')
+            # print(f'vrdj: {embedding=} {metric=} {device=} {directory=}')
             self._vrdj_store = db.Store(directory, metric=metric,
                                         embedding=embedding, device=device)
         return self._vrdj_store
@@ -48,7 +48,13 @@ class VrdjPlugin(BeetsPlugin):
         store = self.vrdj_store
         item_path = item.path.decode()
         self._log.info(f'ingesting {item.id} {item_path}')
-        store.add_embedding(item.id, item_path)
+        try:
+            store.add_embedding(item.id, item_path)
+        except Exception as err:
+            self._log.error(f'failed with {err}')
+            self._log.error(f'is the file valid? {item_path}')
+            return
+        return item
 
     def commands(self):
         vrdj_command = Subcommand(
@@ -82,18 +88,24 @@ class VrdjPlugin(BeetsPlugin):
         # enough to keep
         item_ids = list()
         for item in items:
+            item = self.vrdj_ingest_item(lib, item)
+            if item is None:
+                continue
             item_ids.append(item.id)
-            self.vrdj_ingest_item(lib, item)
+        if not item_ids:
+            self._log.error("no seed items")
+            return
 
         new_ids = similar_average_many(self.vrdj_store, item_ids, opts.count)
-        print(f'{len(new_ids)=}')
+        # print(f'{len(new_ids)=}')
         for item_id in new_ids:
-            print(f'{item_id=} {type(item_id)}')
+            #print(f'{item_id=} {type(item_id)}')
             item = lib.get_item(item_id)
             if item is None:
                 print(f'no item for {item_id=}')
             else:
-                print(f'{item.id=} {item.path=}')
+                #print(f'{item.id=} {item.path=}')
+                print(item.path.decode())
         
         # if --ingest
         # if --playlist

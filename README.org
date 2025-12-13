@@ -48,3 +48,7 @@ $ beet vrdj <query-defining-seeds> --count <number-of-similar>
 - [ ] save results to file via =-o/--output= including
 - [ ] include canned formats such as m3u playlists.
   
+* Others
+
+- Beets' chroma / acoustic ID.  This can be used to evaluate "equality" if not "distance"
+- [[https://github.com/jaeheonshim/vibenet][vibenet]] gives a 7-dimensional vector in a "music emotion" semantically meaningful space (energy, speechiness, etc).  It could be one day added to vrdj as an embedding.  Or, perhaps find a way to usefully combine vibenet and vggish embeddings.
