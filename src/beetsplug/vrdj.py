@@ -3,7 +3,7 @@ The vrdj plugin for beets
 '''
 from pathlib import Path
 from beets.plugins import BeetsPlugin
-from beets.ui import Subcommand, decargs, UserError
+from beets.ui import Subcommand, decargs, print_
 from beets import config as main_config
 
 class VrdjPlugin(BeetsPlugin):
@@ -47,7 +47,7 @@ class VrdjPlugin(BeetsPlugin):
     def vrdj_ingest_item(self, lib, item):
         store = self.vrdj_store
         item_path = item.path.decode()
-        self._log.info(f'ingesting {item.id} {item_path}')
+        self._log.debug(f'ingesting {item.id} {item_path}')
         try:
             store.add_embedding(item.id, item_path)
         except Exception as err:
@@ -61,24 +61,21 @@ class VrdjPlugin(BeetsPlugin):
             'vrdj',
             help='Virtual Radio DJ',
         )
-        # fixme: allow override of config file?
         vrdj_command.parser.add_option(
-            '-o', '--output', 
-            help='An output file for matches')
+            '-P', '--playlist', type=str, default=None,
+            help='Output results as an m3u playlist file')
         vrdj_command.parser.add_option(
-            '-f', '--format', 
-            help='A print format for output, special "m3u" for playlist')
-        vrdj_command.parser.add_option(
-            '-c', '--count', default=10, type=int,
+            '-n', '--number', default=10, type=int,
             help='Max number of similar items')
+        vrdj_command.parser.add_all_common_options()
         vrdj_command.parser.usage += (
-            "\nWill index query results and search previously index for similar items"
+            "\nSimilarity indexing and queries"
         )
-        
         vrdj_command.func = self._vrdj_command_func
         return [vrdj_command]
 
     def _vrdj_command_func(self, lib, opts, args):
+
         from vrdj.op import similar_average_many
 
         query = decargs(args)
@@ -96,17 +93,31 @@ class VrdjPlugin(BeetsPlugin):
             self._log.error("no seed items")
             return
 
-        new_ids = similar_average_many(self.vrdj_store, item_ids, opts.count)
-        # print(f'{len(new_ids)=}')
+        new_ids = similar_average_many(self.vrdj_store, item_ids, opts.number)
+        if not new_ids:
+            self._log.error("no similar songs")
+
+        if opts.playlist:
+            out = open(opts.playlist, "w")
+            out.write("#EXTM3U\n")
+            for item_id in new_ids:
+                item = lib.get_item(item_id)
+                if item is None:
+                    self._log.error(f'no item for {item_id=}')
+                    continue
+                out.write(f"#EXTINF:{int(item.length)},{item.artist} - {item.title}\n")
+                out.write(item.path.decode() + "\n")
+
         for item_id in new_ids:
             #print(f'{item_id=} {type(item_id)}')
             item = lib.get_item(item_id)
             if item is None:
-                print(f'no item for {item_id=}')
-            else:
-                #print(f'{item.id=} {item.path=}')
-                print(item.path.decode())
-        
+                self._log.error(f'no item for {item_id=}')
+                continue
+            print_(format(item))
+            #print_(format(item, fmt))
+            # print(f'{item=}')
+
         # if --ingest
         # if --playlist
         # else print
