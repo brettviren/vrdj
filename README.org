@@ -16,7 +16,7 @@ I recommend using =uv= to install like:
 $ uv tool install --with git+https://github.com/brettviren/vrdj beets
 #+end_example
 
-Flavor that to suite your own tastes.
+Flavor that to suit your own tastes.
 
 * Beets plugin
 
