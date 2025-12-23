@@ -51,7 +51,7 @@ def cli(ctx, directory, metric, embedding, device):
     Virtual Radio DJ (VRDJ) CLI for indexing and searching audio similarity 
     based on VGGish embeddings and Faiss.
     """
-    ctx.obj = Main(directory, metric, embeddings, device)
+    ctx.obj = Main(directory, metric, embedding, device)
 
 
 @cli.command('beets')
@@ -80,6 +80,7 @@ def cmd_ingest(ctx, filepaths):
         item_path = item.path.decode()
         print(f'ingesting {item.id} {item_path}')
         ctx.obj.store.add_embedding(item.id, item_path)
+
 
 def main():
     cli(obj={})

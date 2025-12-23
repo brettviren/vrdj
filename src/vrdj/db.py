@@ -100,6 +100,7 @@ class Store:
         '''
         embedding = self.get_embedding(item_id)
         if embedding is not None and not force:
+            # print(f"already have embedding for {item_id=}")
             return
 
         if isinstance(source, np.ndarray):

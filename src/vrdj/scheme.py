@@ -122,6 +122,20 @@ class Index:
         '''
         Insert the embedding for the item.
         '''
+        print("Adding embedding")
+        with sqlite_cursor(self.db) as cursor:
+            cursor.execute(
+                f"""
+                SELECT COUNT(*)
+                FROM {self.tablename}
+                WHERE item_id = ?
+                """, (item_id,))
+            got = cursor.fetchone()[0]
+            if got:
+                print(f"already have {got} indices for {item_id}")
+                return
+            
+
         vecs = self.vectorize(embedding)
         start_size = self.index.ntotal
         self.index.add(vecs)
